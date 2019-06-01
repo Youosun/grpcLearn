@@ -1,0 +1,64 @@
+1. type XXX struct {
+
+	}
+
+2. Implement the serivces defined in proto file
+	***
+	func (x *XXX) YYY(ctx context.Context, in *pb.Request) (*pb.Response, erro)
+	{}
+
+MAIN()
+3. listen the port 
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port)
+
+4. get default new grcpServer
+	s := grpc.NewServer()
+
+5. register [multiple] service into grpcServer
+	pb.RegisterXXXServer(s, &XXX{})
+	...
+
+6. register reflection service on grpc Server
+	reflect.Register(s) ***
+
+	USE grpc_cli [build from source C++]
+
+	A. List all the serices exposed at a given port
+		grpc_cli ls localhost:50051
+
+		output:
+			grpc.example.echo.Echo
+			grpc.reflection.v1alpha.ServerReflection
+			helloworld.Greeter
+
+	B. List one serice with details
+		grpc_cli ls localhost:50051 helloworld.Greeter -l
+
+		output:
+			filename: helloworld.proto
+			package: helloworld;
+			service.Greeter{
+				rpc SayHello(helloworld.HelloRequest) returns(helloworld.HelloReply) {}
+			}
+	C. List one method with details 
+		grpc_cli ls localhost:50051 helloworld.Greeter.SayHello -l
+
+		output:
+			rpc SayHello(helloworld.HelloRequest) returns(helloworld.HelloReply) {}
+
+	D. Inspect mesage types
+		grpc_cli type localhost:50051 helloworld.HelloRequest
+
+		output:
+			message HelloRequest {
+				optional string name = 1[json_name = "name"];
+			}
+	
+	E. Call a remote method [useful for test your service]
+		grpc_cli call localhost:50051 SayHello "name: 'xiaoming'"
+
+		output:
+			message: "Hello xiaoming"
+
+7. serve the incoming connection
+	err := s.Serve(lis)
